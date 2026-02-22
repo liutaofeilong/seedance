@@ -173,14 +173,72 @@ export default function Generate() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 压缩图片函数
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          let width = img.width
+          let height = img.height
+          
+          // 限制最大尺寸为 1920x1080
+          const maxWidth = 1920
+          const maxHeight = 1080
+          
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height)
+            width = width * ratio
+            height = height * ratio
+          }
+          
+          canvas.width = width
+          canvas.height = height
+          
+          const ctx = canvas.getContext('2d')!
+          ctx.drawImage(img, 0, 0, width, height)
+          
+          // 转换为 Blob，质量设为 0.8
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                })
+                resolve(compressedFile)
+              } else {
+                resolve(file)
+              }
+            },
+            'image/jpeg',
+            0.8
+          )
+        }
+        img.src = e.target?.result as string
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     // 限制最多2张图片（首帧和尾帧）
     if (files.length + imageFiles.length > 2) {
       setError('Maximum 2 images allowed (first frame and last frame)')
       return
     }
-    setImageFiles(prev => [...prev, ...files].slice(0, 2))
+    
+    setError('Compressing images...')
+    
+    // 压缩所有图片
+    const compressedFiles = await Promise.all(
+      files.map(file => compressImage(file))
+    )
+    
+    setImageFiles(prev => [...prev, ...compressedFiles].slice(0, 2))
     setError('')
   }
 
