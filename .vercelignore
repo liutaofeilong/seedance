@@ -1,0 +1,11 @@
+# Ignore documentation files
+*.md
+!README.md
+
+# Ignore setup scripts
+setup-env.ps1
+fix-build.ps1
+
+# Ignore example files
+env.example.txt
+

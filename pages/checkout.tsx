@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { supabase } from '@/lib/supabase'
 
 export default function Checkout() {
   const router = useRouter()
@@ -18,13 +17,21 @@ export default function Checkout() {
   }, [])
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    try {
+      // 动态导入 supabase，避免构建时执行
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login?redirect=pricing')
+        return
+      }
+      setUser(user)
+    } catch (error) {
+      console.error('Auth error:', error)
       router.push('/login?redirect=pricing')
-      return
+    } finally {
+      setLoading(false)
     }
-    setUser(user)
-    setLoading(false)
   }
 
   const createOrder = (data: any, actions: any) => {
@@ -50,6 +57,8 @@ export default function Checkout() {
 
     // 保存订阅信息到 Supabase
     try {
+      // 动态导入 supabase
+      const { supabase } = await import('@/lib/supabase')
       const { error } = await supabase
         .from('subscriptions')
         .insert({
@@ -130,24 +139,30 @@ export default function Checkout() {
                 </p>
               </div>
 
-              <PayPalScriptProvider
-                options={{
-                  clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
-                  currency: 'USD',
-                }}
-              >
-                <PayPalButtons
-                  style={{
-                    layout: 'vertical',
-                    color: 'blue',
-                    shape: 'rect',
-                    label: 'subscribe',
+              {process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ? (
+                <PayPalScriptProvider
+                  options={{
+                    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID,
+                    currency: 'USD',
                   }}
-                  createOrder={createOrder}
-                  onApprove={onApprove}
-                  onError={onError}
-                />
-              </PayPalScriptProvider>
+                >
+                  <PayPalButtons
+                    style={{
+                      layout: 'vertical',
+                      color: 'blue',
+                      shape: 'rect',
+                      label: 'subscribe',
+                    }}
+                    createOrder={createOrder}
+                    onApprove={onApprove}
+                    onError={onError}
+                  />
+                </PayPalScriptProvider>
+              ) : (
+                <div className="text-center text-red-400 p-4 border border-red-400/20 rounded-xl">
+                  PayPal is not configured. Please contact support.
+                </div>
+              )}
             </div>
 
             <div className="text-center text-sm text-gray-400">
