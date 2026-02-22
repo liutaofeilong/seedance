@@ -106,9 +106,9 @@ export default async function handler(
           mode,
           prompt,
           aspect_ratio: aspectRatio,
-          video_url: seedanceResponse.videoUrl || null,
+          video_url: null,
           task_id: seedanceResponse.taskId,
-          status: seedanceResponse.videoUrl ? 'completed' : 'processing',
+          status: 'processing',
           created_at: new Date().toISOString(),
         })
 
@@ -118,7 +118,6 @@ export default async function handler(
       
       return res.status(200).json({
         success: true,
-        videoUrl: seedanceResponse.videoUrl,
         taskId: seedanceResponse.taskId,
         status: seedanceResponse.status || 'processing',
       })
