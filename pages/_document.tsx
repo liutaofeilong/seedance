@@ -19,6 +19,13 @@ export default function Document() {
             `,
           }}
         />
+
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2557782788387187"
+          crossOrigin="anonymous"
+        />
       </Head>
       <body>
         <Main />
