@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# 主要页面
+Allow: /generate
+Allow: /pricing
+Allow: /login
+Allow: /profile
+
+# 禁止爬取
+Disallow: /api/
+Disallow: /checkout
+Disallow: /success
+
+# Sitemap
+Sitemap: https://seedance.ai/sitemap.xml
+
+# 爬虫延迟
+Crawl-delay: 1
+
