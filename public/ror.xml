@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:ror="http://rorweb.com/0.1/" >
+<channel>
+  <title>ROR Sitemap for https://seedance.forum/</title>
+  <link>https://seedance.forum/</link>
+
+<item>
+     <link>https://seedance.forum/</link>
+     <title>Seedance AI - 领先的AI视频生成平台 | 文生视频 图生视频 AI创作工具</title>
+     <description>Seedance AI是专业的人工智能视频生成平台，支持文生视频、图生视频、AI绘画、3D生成。采用最先进的大语言模型和视觉理解技术，为创作者提供强大的AI Agent工具。立即体验AI视频制作、智能配音、自动剪辑等功能。</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>0</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://seedance.forum/generate</link>
+     <title>AI Video Generator - Text to Video &amp;amp; Image to Video | Seedance AI</title>
+     <description>Create stunning AI videos with Seedance. Transform text and images into professional videos using advanced AI models. Multiple resolutions, aspect ratios, and audio options available.</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://seedance.forum/login</link>
+     <title>Sign In - Seedance</title>
+     <description>Sign In - Seedance</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+<item>
+     <link>https://seedance.forum/signup</link>
+     <title>Sign Up - Seedance</title>
+     <description>Sign Up - Seedance</description>
+     <ror:updatePeriod></ror:updatePeriod>
+     <ror:sortOrder>1</ror:sortOrder>
+     <ror:resourceOf>sitemap</ror:resourceOf>
+</item>
+</channel>
+</rss>
+  
