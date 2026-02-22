@@ -18,7 +18,21 @@ export default function Navbar() {
       setUser(session?.user || null)
     })
 
-    return () => {
+    // 生成用户头像颜色（基于邮箱）
+  const getUserAvatarColor = (email: string) => {
+    const colors = [
+      'from-cyan-500 to-blue-500',
+      'from-purple-500 to-pink-500',
+      'from-green-500 to-teal-500',
+      'from-orange-500 to-red-500',
+      'from-indigo-500 to-purple-500',
+      'from-yellow-500 to-orange-500',
+    ]
+    const index = email.charCodeAt(0) % colors.length
+    return colors[index]
+  }
+
+  return () => {
       authListener.subscription.unsubscribe()
     }
   }, [])
@@ -71,15 +85,26 @@ export default function Navbar() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl glass glass-hover border border-primary/30 transition-all"
                 >
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
+                  <div className={`w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br ${
+                    user.user_metadata?.avatar_url 
+                      ? '' 
+                      : getUserAvatarColor(user.email || '')
+                  } flex items-center justify-center shadow-lg`}>
                     {user.user_metadata?.avatar_url ? (
-                      <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                      <img 
+                        src={user.user_metadata.avatar_url} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover" 
+                      />
                     ) : (
-                      <span className="text-sm font-bold">
+                      <span className="text-sm font-bold text-white">
                         {user.email?.charAt(0).toUpperCase()}
                       </span>
                     )}
                   </div>
+                  <span className="text-sm font-medium hidden lg:block">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                  </span>
                   <svg className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -89,8 +114,35 @@ export default function Navbar() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full right-0 mt-2 w-48 glass border border-primary/30 rounded-xl overflow-hidden z-50"
+                    className="absolute top-full right-0 mt-2 w-56 glass border border-primary/30 rounded-xl overflow-hidden z-50 shadow-2xl"
                   >
+                    <div className="px-4 py-3 border-b border-primary/10">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br ${
+                          user.user_metadata?.avatar_url 
+                            ? '' 
+                            : getUserAvatarColor(user.email || '')
+                        } flex items-center justify-center shadow-lg`}>
+                          {user.user_metadata?.avatar_url ? (
+                            <img 
+                              src={user.user_metadata.avatar_url} 
+                              alt="Avatar" 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <span className="text-base font-bold text-white">
+                              {user.email?.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate">
+                            {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
                     <Link
                       href="/profile"
                       className="block px-4 py-3 hover:bg-white/5 transition-colors border-b border-primary/10"
