@@ -225,9 +225,12 @@ export default function Generate() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    // 限制最多2张图片（首帧和尾帧）
-    if (files.length + imageFiles.length > 2) {
-      setError('Maximum 2 images allowed (first frame and last frame)')
+    
+    // Seedance 2.0 支持最多10张图片，其他模型最多2张
+    const maxImages = selectedModel === 'doubao-seedance-2-0' ? 10 : 2
+    
+    if (files.length + imageFiles.length > maxImages) {
+      setError(`Maximum ${maxImages} images allowed for ${selectedModel === 'doubao-seedance-2-0' ? 'Seedance 2.0' : 'this model'}`)
       return
     }
     
@@ -238,7 +241,7 @@ export default function Generate() {
       files.map(file => compressImage(file))
     )
     
-    setImageFiles(prev => [...prev, ...compressedFiles].slice(0, 2))
+    setImageFiles(prev => [...prev, ...compressedFiles].slice(0, maxImages))
     setError('')
   }
 
@@ -496,10 +499,13 @@ export default function Generate() {
               {mode === 'image' && (
                 <div className="mb-6">
                   <label className="block text-lg font-semibold mb-3">
-                    Upload Image
+                    Upload Images
                   </label>
                   <p className="text-sm text-gray-400 mb-3">
-                    Upload 1 image for first-frame generation, or 2 images for first-last frame generation
+                    {selectedModel === 'doubao-seedance-2-0' 
+                      ? '🎨 Seedance 2.0: Upload up to 10 images for multi-frame video generation'
+                      : 'Upload 1 image for first-frame generation, or 2 images for first-last frame generation'
+                    }
                   </p>
                   
                   {/* Image Upload Area */}
@@ -508,6 +514,7 @@ export default function Generate() {
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
+                      multiple={selectedModel === 'doubao-seedance-2-0'}
                       className="hidden"
                       id="image-upload"
                     />
@@ -515,15 +522,19 @@ export default function Generate() {
                       <svg className="w-12 h-12 mx-auto mb-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      <p className="text-gray-300 font-semibold">Click to upload image</p>
+                      <p className="text-gray-300 font-semibold">
+                        {selectedModel === 'doubao-seedance-2-0' ? 'Click to upload images (multiple)' : 'Click to upload image'}
+                      </p>
                       <p className="text-sm text-gray-400 mt-2">PNG, JPG, WebP up to 30MB</p>
-                      <p className="text-xs text-cyan-400 mt-2">Maximum 2 images</p>
+                      <p className="text-xs text-cyan-400 mt-2">
+                        {selectedModel === 'doubao-seedance-2-0' ? 'Maximum 10 images' : 'Maximum 2 images'}
+                      </p>
                     </label>
                   </div>
 
                   {/* Uploaded Images Preview */}
                   {imageFiles.length > 0 && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className={`grid gap-4 ${selectedModel === 'doubao-seedance-2-0' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2'}`}>
                       {imageFiles.map((file, index) => (
                         <motion.div
                           key={index}
@@ -540,7 +551,10 @@ export default function Generate() {
                           </div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs text-gray-400 truncate flex-1">
-                              {index === 0 ? 'First Frame' : 'Last Frame'}: {file.name}
+                              {selectedModel === 'doubao-seedance-2-0' 
+                                ? `Frame ${index + 1}` 
+                                : (index === 0 ? 'First Frame' : 'Last Frame')
+                              }
                             </span>
                             <button
                               onClick={() => removeImage(index)}
