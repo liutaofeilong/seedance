@@ -72,3 +72,4 @@ CREATE POLICY "Users can insert their own subscriptions"
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+

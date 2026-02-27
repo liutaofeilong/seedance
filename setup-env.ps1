@@ -23,3 +23,4 @@ Write-Host "✅ .env.local 文件创建成功！" -ForegroundColor Green
 Write-Host ""
 Write-Host "现在可以运行: npm run dev" -ForegroundColor Cyan
 
+

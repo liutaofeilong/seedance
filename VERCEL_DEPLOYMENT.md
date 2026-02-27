@@ -68,3 +68,4 @@ NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_paypal_client_id
 - `/pricing` - 定价页面
 - `/login` - 登录页面
 
+

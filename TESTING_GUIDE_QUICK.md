@@ -123,3 +123,4 @@ Task status response: { "status": "succeeded", "videos": [...] }
 3. 上传不同的图片
 4. 查看 Supabase 中的生成记录
 
+
