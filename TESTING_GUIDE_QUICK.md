@@ -124,3 +124,7 @@ Task status response: { "status": "succeeded", "videos": [...] }
 4. 查看 Supabase 中的生成记录
 
 
+
+
+
+

@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import SEO from '@/components/SEO'
 import { supabase } from '@/lib/supabase'
+import { checkRateLimit, getRemainingTime } from '@/lib/rateLimit'
 
 const aspectRatios = [
   { label: '21:9', value: '21:9' },
@@ -57,6 +58,11 @@ export default function Generate() {
         },
       })
 
+      if (!response.ok) {
+        console.error('Check task failed:', response.status)
+        return false // 继续轮询
+      }
+
       const data = await response.json()
       
       if (data.success) {
@@ -77,6 +83,7 @@ export default function Generate() {
       return false // 继续轮询
     } catch (error: any) {
       console.error('Check task error:', error)
+      // 网络错误不中断轮询
       return false
     }
   }
@@ -91,6 +98,14 @@ export default function Generate() {
     
     const pollInterval = setInterval(async () => {
       attempts++
+      
+      // 更新进度提示
+      const progress = Math.min(Math.floor((attempts / maxAttempts) * 100), 95)
+      if (attempts % 6 === 0) { // 每30秒更新一次状态提示
+        const messages = ['Processing...', 'Generating frames...', 'Adding effects...', 'Almost done...']
+        const msgIndex = Math.floor(attempts / 24) % messages.length
+        setTaskStatus(messages[msgIndex])
+      }
       
       if (attempts > maxAttempts) {
         clearInterval(pollInterval)
@@ -108,6 +123,13 @@ export default function Generate() {
   }
 
   const handleGenerate = async () => {
+    // 速率限制检查
+    if (!checkRateLimit('video-generation', 5000)) {
+      const remaining = getRemainingTime('video-generation', 5000)
+      setError(`Please wait ${remaining} seconds before generating again`)
+      return
+    }
+
     setLoading(true)
     setError('')
     setVideoUrl(null)
@@ -173,34 +195,47 @@ export default function Generate() {
     }
   }
 
-  // 压缩图片函数
+  // 压缩图片函数 - 优化版
   const compressImage = async (file: File): Promise<File> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      // 检查文件大小，小于1MB的不压缩
+      if (file.size < 1024 * 1024) {
+        resolve(file)
+        return
+      }
+
       const reader = new FileReader()
+      reader.onerror = () => reject(new Error('Failed to read file'))
       reader.onload = (e) => {
         const img = new Image()
+        img.onerror = () => reject(new Error('Failed to load image'))
         img.onload = () => {
           const canvas = document.createElement('canvas')
           let width = img.width
           let height = img.height
           
-          // 限制最大尺寸为 1920x1080
+          // 根据原始尺寸动态调整目标尺寸
           const maxWidth = 1920
-          const maxHeight = 1080
+          const maxHeight = 1920
           
           if (width > maxWidth || height > maxHeight) {
             const ratio = Math.min(maxWidth / width, maxHeight / height)
-            width = width * ratio
-            height = height * ratio
+            width = Math.floor(width * ratio)
+            height = Math.floor(height * ratio)
           }
           
           canvas.width = width
           canvas.height = height
           
           const ctx = canvas.getContext('2d')!
+          // 使用更好的图像平滑算法
+          ctx.imageSmoothingEnabled = true
+          ctx.imageSmoothingQuality = 'high'
           ctx.drawImage(img, 0, 0, width, height)
           
-          // 转换为 Blob，质量设为 0.8
+          // 根据文件大小动态调整质量
+          const quality = file.size > 5 * 1024 * 1024 ? 0.7 : 0.85
+          
           canvas.toBlob(
             (blob) => {
               if (blob) {
@@ -208,13 +243,14 @@ export default function Generate() {
                   type: 'image/jpeg',
                   lastModified: Date.now(),
                 })
+                console.log(`Compressed: ${(file.size / 1024).toFixed(0)}KB → ${(blob.size / 1024).toFixed(0)}KB`)
                 resolve(compressedFile)
               } else {
                 resolve(file)
               }
             },
             'image/jpeg',
-            0.8
+            quality
           )
         }
         img.src = e.target?.result as string
@@ -234,15 +270,34 @@ export default function Generate() {
       return
     }
     
+    // 验证文件类型和大小
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        setError(`${file.name} is not an image file`)
+        return false
+      }
+      if (file.size > 30 * 1024 * 1024) {
+        setError(`${file.name} exceeds 30MB limit`)
+        return false
+      }
+      return true
+    })
+    
+    if (validFiles.length === 0) return
+    
     setError('Compressing images...')
     
-    // 压缩所有图片
-    const compressedFiles = await Promise.all(
-      files.map(file => compressImage(file))
-    )
-    
-    setImageFiles(prev => [...prev, ...compressedFiles].slice(0, maxImages))
-    setError('')
+    try {
+      // 压缩所有图片
+      const compressedFiles = await Promise.all(
+        validFiles.map(file => compressImage(file))
+      )
+      
+      setImageFiles(prev => [...prev, ...compressedFiles].slice(0, maxImages))
+      setError('')
+    } catch (err: any) {
+      setError(`Image processing failed: ${err.message}`)
+    }
   }
 
   const removeImage = (index: number) => {

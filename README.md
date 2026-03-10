@@ -1,178 +1,199 @@
-# Seedance - AI Video Generation Platform
+# 🎬 Seedance AI - AI视频生成平台
 
-A cutting-edge AI-powered video generation platform with stunning cyberpunk aesthetics. Create professional videos from text descriptions or images using advanced AI technology.
+<div align="center">
 
-## ✨ Features
+![Seedance AI](https://img.shields.io/badge/Seedance-AI%20Video%20Generator-00D9FF?style=for-the-badge)
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=for-the-badge&logo=typescript)
+![Supabase](https://img.shields.io/badge/Supabase-Auth%20%26%20DB-green?style=for-the-badge&logo=supabase)
 
-- 🎬 **Text to Video**: Transform written narratives into cinematic videos
-- 🖼️ **Image to Video**: Animate static images with AI
-- 🔐 **Google OAuth**: Seamless authentication with Google
-- 💳 **Subscription Plans**: Flexible pricing with Stripe integration
-- 🎨 **Cyberpunk UI**: Modern, futuristic design with neon accents
-- ⚡ **Lightning Fast**: Generate videos in under 30 seconds
-- 🔒 **Supabase Backend**: Secure, scalable database
+专业的AI视频生成平台 | 文生视频 · 图生视频 · 多模型支持
 
-## 🎨 Design Highlights
+[在线演示](https://seedance.ai) · [部署指南](./DEPLOYMENT.md) · [报告问题](https://github.com/yourusername/seedance/issues)
 
-- **Orbitron** font for futuristic headings
-- **Cyan (#00F0FF)**, **Purple (#7C3AED)**, **Pink (#F72585)** color scheme
-- Glassmorphism effects with neon glows
-- Smooth Framer Motion animations
-- Responsive design for all devices
+</div>
 
-## 🛠️ Tech Stack
+---
 
-- **Framework**: Next.js 14 with TypeScript
-- **Styling**: Tailwind CSS with custom cyberpunk theme
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth with Google OAuth
-- **Payment**: Stripe
-- **Animations**: Framer Motion
-- **AI Integration**: Seedance API
+## ✨ 核心功能
 
-## 🚀 Getting Started
+### 🎥 视频生成
+- **文生视频 (Text-to-Video)** - 输入文字描述，AI 自动生成视频
+- **图生视频 (Image-to-Video)** - 上传图片，生成动态视频
+- **多帧生成** - 支持首帧、尾帧、多帧（最多10帧）生成
 
-### Prerequisites
+### 🤖 AI 模型
+- Seedance 2.0 - 最新实验模型
+- Seedance 1.5 Pro - 推荐，支持音频
+- Seedance 1.0 系列 - 稳定快速
 
-- Node.js 18+
-- Supabase account
-- Stripe account
-- Seedance API key
-- Google OAuth credentials
+### ⚙️ 灵活配置
+- 多种宽高比：21:9, 16:9, 4:3, 1:1, 3:4, 9:16
+- 分辨率选择：480p, 720p, 1080p
+- 时长控制：3-10秒
+- 音频生成、水印、镜头控制
 
-### Installation
+### 💳 订阅系统
+- 免费试用：1次生成
+- 月度订阅：$50/月，无限生成
+- 季度订阅：$125/3个月，节省 $25
+- 年度订阅：$400/年，节省 $200
 
-1. Clone the repository:
+## 🛠️ 技术栈
+
+### 前端
+- **框架**: Next.js 14 (React 18)
+- **语言**: TypeScript
+- **样式**: Tailwind CSS
+- **动画**: Framer Motion
+- **状态管理**: React Hooks
+
+### 后端
+- **API**: Next.js API Routes
+- **认证**: Supabase Auth
+- **数据库**: Supabase (PostgreSQL)
+- **存储**: Supabase Storage
+- **支付**: PayPal
+
+### AI 服务
+- **视频生成**: 豆包 Seedance API
+- **模型**: Doubao Seed 2.0 Pro
+
+## 📦 项目结构
+
+```
+seedance/
+├── components/          # React 组件
+│   ├── Navbar.tsx      # 导航栏
+│   ├── Hero.tsx        # 首页 Hero
+│   ├── Features.tsx    # 功能展示
+│   ├── Pricing.tsx     # 价格方案
+│   └── Footer.tsx      # 页脚
+├── pages/              # Next.js 页面
+│   ├── index.tsx       # 首页
+│   ├── generate.tsx    # 视频生成页
+│   ├── login.tsx       # 登录页
+│   ├── signup.tsx      # 注册页
+│   ├── checkout.tsx    # 支付页
+│   └── api/            # API 路由
+│       ├── generate.ts # 视频生成 API
+│       └── check-task.ts # 任务状态查询
+├── lib/                # 工具库
+│   ├── supabase.ts     # Supabase 客户端
+│   └── rateLimit.ts    # 速率限制
+├── styles/             # 全局样式
+├── public/             # 静态资源
+└── supabase-schema.sql # 数据库结构
+
+```
+
+## 🚀 快速开始
+
+### 1. 克隆项目
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/seedance.git
 cd seedance
 ```
 
-2. Install dependencies:
+### 2. 安装依赖
+
 ```bash
 npm install
 ```
 
-3. Create `.env.local` file:
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+### 3. 配置环境变量
 
-# Seedance API
-SEEDANCE_API_KEY=your-seedance-api-key
-SEEDANCE_API_URL=https://api.seedance.ai
-
-# Stripe
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+Windows PowerShell:
+```powershell
+.\setup-env.ps1
 ```
 
-4. Set up Supabase:
-   - Create a new project at [supabase.com](https://supabase.com)
-   - Enable Google OAuth in Authentication settings
-   - Copy your project URL and anon key
+或手动创建 `.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SEEDANCE_API_KEY=your_seedance_api_key
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_paypal_client_id
+```
 
-5. Set up Google OAuth:
-   - Go to [Google Cloud Console](https://console.cloud.google.com)
-   - Create OAuth 2.0 credentials
-   - Add authorized redirect URI: `https://your-project.supabase.co/auth/v1/callback`
-   - Add credentials to Supabase Auth settings
+### 4. 设置数据库
 
-6. Run the development server:
+在 Supabase SQL Editor 中执行 `supabase-schema.sql`
+
+### 5. 启动开发服务器
+
 ```bash
 npm run dev
 ```
 
-7. Open [http://localhost:3000](http://localhost:3000)
+访问 http://localhost:3000
 
-## 💰 Pricing Plans
+## 📖 详细文档
 
-- **Free Trial**: $0 - 1 video generation
-- **Monthly**: $100/month - Unlimited videos, 4K quality
-- **Quarterly**: $250/3 months - Save $50
-- **Annual**: $800/year - Save $400
+- [部署指南](./DEPLOYMENT.md) - 生产环境部署说明
+- [数据库结构](./supabase-schema.sql) - Supabase 表结构
 
-## 📁 Project Structure
+## 🎨 功能亮点
 
-```
-seedance/
-├── components/          # React components
-│   ├── Navbar.tsx      # Navigation with glassmorphism
-│   ├── Hero.tsx        # Landing hero section
-│   ├── Features.tsx    # Feature showcase
-│   ├── Pricing.tsx     # Pricing cards
-│   └── Footer.tsx      # Footer with social links
-├── pages/              # Next.js pages
-│   ├── index.tsx       # Landing page
-│   ├── generate.tsx    # Video generation interface
-│   ├── login.tsx       # Login with Google OAuth
-│   ├── signup.tsx      # Signup page
-│   └── api/            # API routes
-├── lib/                # Utility functions
-│   └── supabase.ts     # Supabase client
-├── styles/             # Global styles
-│   └── globals.css     # Cyberpunk theme
-└── public/             # Static assets
-```
+### 智能图片压缩
+- 自动检测图片大小
+- 动态调整压缩质量
+- 保持高质量输出
 
-## 🎨 Color Palette
+### 实时任务追踪
+- 异步任务轮询
+- 进度状态显示
+- 友好的错误提示
 
-- **Primary (Cyan)**: #00F0FF - Main accent color
-- **Secondary (Purple)**: #7C3AED - Secondary accent
-- **Accent (Pink)**: #F72585 - Call-to-action
-- **Dark Background**: #0A0E27 - Main background
-- **Dark Card**: #1A1F3A - Card backgrounds
+### 速率限制保护
+- 客户端请求限制
+- 防止频繁点击
+- 提升用户体验
 
-## 🔧 Configuration
+### SEO 优化
+- 结构化数据
+- 动态 Meta 标签
+- 语义化 HTML
 
-### Supabase Setup
+## 🔐 安全特性
 
-Create the following table in your Supabase database:
+- ✅ JWT Token 认证
+- ✅ Row Level Security (RLS)
+- ✅ 环境变量隔离
+- ✅ 客户端速率限制
+- ✅ HTTPS 强制（生产）
 
-```sql
-create table users (
-  id uuid references auth.users primary key,
-  name text,
-  email text unique,
-  subscription_plan text default 'free',
-  subscription_status text default 'active',
-  videos_generated integer default 0,
-  created_at timestamp with time zone default now()
-);
-```
+## 📊 性能优化
 
-### Stripe Setup
+- ✅ Next.js 增量静态生成
+- ✅ 图片懒加载
+- ✅ 代码分割
+- ✅ API 请求缓存
+- ✅ 数据库索引优化
 
-1. Create products in Stripe Dashboard
-2. Copy price IDs to your code
-3. Set up webhook endpoint: `/api/stripe/webhook`
-4. Add webhook secret to `.env.local`
+## 🤝 贡献
 
-## 🌐 Deployment
+欢迎提交 Pull Request 或创建 Issue！
 
-### Vercel (Recommended)
+## 📄 许可证
 
-1. Push code to GitHub
-2. Import project in Vercel
-3. Add environment variables
-4. Deploy
+MIT License - 详见 [LICENSE](./LICENSE)
 
-### Environment Variables
+## 🙏 致谢
 
-Make sure to add all environment variables from `.env.local.example` to your deployment platform.
-
-## 📝 License
-
-MIT License - feel free to use this project for your own purposes.
-
-## 🤝 Support
-
-For support, email support@seedance.com or open an issue.
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.com/)
+- [豆包 AI](https://www.volcengine.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Framer Motion](https://www.framer.com/motion/)
 
 ---
 
-Built with ❤️ using Next.js, Supabase, and cutting-edge AI technology.
+<div align="center">
 
-# seedance
+Made with ❤️ by Seedance Team
+
+[Website](https://seedance.ai) · [Twitter](https://twitter.com/seedance) · [Discord](https://discord.gg/seedance)
+
+</div>

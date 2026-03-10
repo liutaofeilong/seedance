@@ -24,7 +24,7 @@ const plans = [
   },
   {
     name: 'Monthly',
-    price: '$100',
+    price: '$50',
     period: 'per month',
     description: 'For regular creators',
     features: [
@@ -41,13 +41,13 @@ const plans = [
     popular: true,
     gradient: 'from-primary to-secondary',
     priceId: 'monthly-plan',
-    amount: '100.00',
+    amount: '50.00',
   },
   {
     name: 'Quarterly',
-    price: '$250',
+    price: '$125',
     period: 'per 3 months',
-    savings: 'Save $50',
+    savings: 'Save $25',
     description: 'Best value for pros',
     features: [
       'Everything in Monthly',
@@ -62,13 +62,13 @@ const plans = [
     popular: false,
     gradient: 'from-secondary to-accent',
     priceId: 'quarterly-plan',
-    amount: '250.00',
+    amount: '125.00',
   },
   {
     name: 'Annual',
-    price: '$800',
+    price: '$400',
     period: 'per year',
-    savings: 'Save $400',
+    savings: 'Save $200',
     description: 'For power users',
     features: [
       'Everything in Quarterly',
@@ -84,7 +84,7 @@ const plans = [
     popular: false,
     gradient: 'from-accent to-primary',
     priceId: 'annual-plan',
-    amount: '800.00',
+    amount: '400.00',
   },
 ]
 
