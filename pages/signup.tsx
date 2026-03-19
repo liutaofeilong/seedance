@@ -20,7 +20,10 @@ export default function Signup() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Attempting signup with:', { email, name })
+      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -30,13 +33,18 @@ export default function Signup() {
         },
       })
 
+      console.log('Signup response:', { data, error })
+
       if (error) {
-        setError(error.message)
+        console.error('Signup error:', error)
+        setError(`Error: ${error.message}`)
       } else {
+        console.log('Signup successful!')
         router.push('/generate')
       }
-    } catch (error) {
-      setError('An error occurred. Please try again.')
+    } catch (error: any) {
+      console.error('Caught error:', error)
+      setError(`Network error: ${error.message || 'Failed to connect to server. Please check your internet connection or try using a VPN.'}`)
     } finally {
       setLoading(false)
     }
