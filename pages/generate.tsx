@@ -47,6 +47,7 @@ export default function Generate() {
   const [loading, setLoading] = useState(false)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [needsSubscription, setNeedsSubscription] = useState(false)
   const [taskId, setTaskId] = useState<string | null>(null)
   const [taskStatus, setTaskStatus] = useState<string>('')
 
@@ -188,19 +189,11 @@ export default function Generate() {
         
         // 检查是否需要订阅
         if (data.needsSubscription) {
-          setError(
-            <div>
-              <p className="font-semibold mb-2">{data.message}</p>
-              <a 
-                href="/#pricing" 
-                className="inline-block mt-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors"
-              >
-                View Pricing Plans →
-              </a>
-            </div>
-          )
+          setError(data.message || 'Free generation limit reached. Please subscribe to continue.')
+          setNeedsSubscription(true)
         } else {
           setError(data.message || data.error || 'Generation failed. Please check console for details.')
+          setNeedsSubscription(false)
         }
         setLoading(false)
       }
@@ -367,10 +360,18 @@ export default function Generate() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <div className="flex-1">
-                    <p className="font-semibold mb-1">Error</p>
+                    <p className="font-semibold mb-1">{needsSubscription ? 'Subscription Required' : 'Error'}</p>
                     <p className="text-sm">{error}</p>
+                    {needsSubscription && (
+                      <a 
+                        href="/#pricing" 
+                        className="inline-block mt-3 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors text-sm"
+                      >
+                        View Pricing Plans →
+                      </a>
+                    )}
                   </div>
-                  <button onClick={() => setError('')} className="text-accent hover:text-accent-light">
+                  <button onClick={() => { setError(''); setNeedsSubscription(false); }} className="text-accent hover:text-accent-light">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
