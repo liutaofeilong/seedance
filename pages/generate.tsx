@@ -185,7 +185,23 @@ export default function Generate() {
         }
       } else {
         console.error('Generation error:', data)
-        setError(data.message || data.error || 'Generation failed. Please check console for details.')
+        
+        // 检查是否需要订阅
+        if (data.needsSubscription) {
+          setError(
+            <div>
+              <p className="font-semibold mb-2">{data.message}</p>
+              <a 
+                href="/#pricing" 
+                className="inline-block mt-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors"
+              >
+                View Pricing Plans →
+              </a>
+            </div>
+          )
+        } else {
+          setError(data.message || data.error || 'Generation failed. Please check console for details.')
+        }
         setLoading(false)
       }
     } catch (error: any) {

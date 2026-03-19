@@ -39,6 +39,58 @@ export default async function handler(
 
     console.log('User authenticated:', user.email)
 
+    // Check user quota
+    const { data: quota, error: quotaError } = await supabase
+      .from('user_quotas')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (quotaError && quotaError.code !== 'PGRST116') {
+      console.error('Quota check error:', quotaError)
+    }
+
+    // If no quota record exists, create one
+    if (!quota) {
+      const { error: createError } = await supabase
+        .from('user_quotas')
+        .insert({
+          user_id: user.id,
+          free_generations_used: 0,
+          free_generations_limit: 1,
+          subscription_generations_used: 0,
+        })
+      
+      if (createError) {
+        console.error('Failed to create quota record:', createError)
+      }
+    }
+
+    // Check if user has active subscription
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString())
+      .single()
+
+    const hasActiveSubscription = !!subscription
+
+    // Check quota limits
+    if (!hasActiveSubscription) {
+      const freeUsed = quota?.free_generations_used || 0
+      const freeLimit = quota?.free_generations_limit || 1
+
+      if (freeUsed >= freeLimit) {
+        return res.status(403).json({
+          success: false,
+          message: 'Free generation limit reached. Please subscribe to continue.',
+          needsSubscription: true,
+        })
+      }
+    }
+
     // Parse form data
     const form = formidable({})
     const [fields, files] = await form.parse(req)
@@ -114,6 +166,25 @@ export default async function handler(
 
       if (dbError) {
         console.error('Database error:', dbError)
+      }
+
+      // Update user quota
+      if (hasActiveSubscription) {
+        // Increment subscription usage
+        await supabase
+          .from('user_quotas')
+          .update({
+            subscription_generations_used: (quota?.subscription_generations_used || 0) + 1,
+          })
+          .eq('user_id', user.id)
+      } else {
+        // Increment free usage
+        await supabase
+          .from('user_quotas')
+          .update({
+            free_generations_used: (quota?.free_generations_used || 0) + 1,
+          })
+          .eq('user_id', user.id)
       }
       
       return res.status(200).json({
