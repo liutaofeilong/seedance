@@ -348,8 +348,8 @@ export default function Generate() {
               Create professional videos from text or images
             </p>
 
-            {/* Error Message */}
-            {error && (
+            {/* Error Message - Only show non-subscription errors at top */}
+            {error && !needsSubscription && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -360,16 +360,8 @@ export default function Generate() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <div className="flex-1">
-                    <p className="font-semibold mb-1">{needsSubscription ? 'Subscription Required' : 'Error'}</p>
+                    <p className="font-semibold mb-1">Error</p>
                     <p className="text-sm">{error}</p>
-                    {needsSubscription && (
-                      <a 
-                        href="/#pricing" 
-                        className="inline-block mt-3 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors text-sm"
-                      >
-                        View Pricing Plans →
-                      </a>
-                    )}
                   </div>
                   <button onClick={() => { setError(''); setNeedsSubscription(false); }} className="text-accent hover:text-accent-light">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -675,6 +667,44 @@ export default function Generate() {
                   '✨ Generate Video'
                 )}
               </button>
+              
+              {/* Subscription Required Alert - Below Generate Button */}
+              {needsSubscription && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 rounded-xl border border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-rose-500/10"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zm-2-5a.75.75 0 00-1.5 0v.008a.75.75 0 001.5 0V3zM3 8a2 2 0 11-4 0 2 2 0 014 0zm0 8a4 4 0 100-8 4 4 0 000 8z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-pink-300 mb-1">Subscription Required</p>
+                      <p className="text-sm text-pink-200/80 mb-3">{error}</p>
+                      <a 
+                        href="/#pricing" 
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg font-semibold transition-all text-sm"
+                      >
+                        View Pricing Plans
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </a>
+                    </div>
+                    <button 
+                      onClick={() => { setError(''); setNeedsSubscription(false); }} 
+                      className="text-pink-400 hover:text-pink-300 flex-shrink-0"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
               
               {/* Task Status Info */}
               {loading && taskId && (
