@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
 export default async function handler(
   req: NextApiRequest,
@@ -70,7 +70,7 @@ export default async function handler(
 
       // 更新数据库记录
       if (status === 'succeeded' && videoUrl) {
-        await supabase
+        await supabaseAdmin
           .from('video_generations')
           .update({
             status: 'completed',
@@ -80,7 +80,7 @@ export default async function handler(
           .eq('task_id', taskId)
           .eq('user_id', user.id)
       } else if (status === 'failed' || status === 'expired') {
-        await supabase
+        await supabaseAdmin
           .from('video_generations')
           .update({
             status: 'failed',

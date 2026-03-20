@@ -44,14 +44,13 @@ CREATE TABLE subscriptions (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. 创建用户配额表
+-- 5. 创建用户配额表（每日免费1次）
 CREATE TABLE user_quotas (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-  free_generations_used INTEGER DEFAULT 0,
-  free_generations_limit INTEGER DEFAULT 1,
-  subscription_generations_used INTEGER DEFAULT 0,
-  reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '1 month',
+  daily_free_used INTEGER NOT NULL DEFAULT 0,
+  daily_reset_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  subscription_generations_used INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -93,6 +92,10 @@ CREATE POLICY "Users can view their own quotas"
   ON user_quotas FOR SELECT
   USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can insert their own quotas"
+  ON user_quotas FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Users can update their own quotas"
   ON user_quotas FOR UPDATE
   USING (auth.uid() = user_id);
@@ -121,4 +124,40 @@ CREATE TRIGGER update_user_quotas_updated_at
   BEFORE UPDATE ON user_quotas
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- 11. 创建原子配额递增函数
+CREATE OR REPLACE FUNCTION increment_daily_free_usage(uid UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE user_quotas
+  SET
+    daily_free_used  = CASE
+                         WHEN daily_reset_date < CURRENT_DATE THEN 1
+                         ELSE daily_free_used + 1
+                       END,
+    daily_reset_date = CURRENT_DATE,
+    updated_at       = NOW()
+  WHERE user_id = uid;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION increment_subscription_usage(uid UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE user_quotas
+  SET
+    subscription_generations_used = subscription_generations_used + 1,
+    updated_at = NOW()
+  WHERE user_id = uid;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION increment_daily_free_usage(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION increment_subscription_usage(UUID) TO authenticated;
 

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import formidable from 'formidable'
 import fs from 'fs'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
 export const config = {
   api: {
@@ -40,7 +40,7 @@ export default async function handler(
     console.log('User authenticated:', user.email)
 
     // Check if user has active subscription
-    const { data: subscription } = await supabase
+    const { data: subscription } = await supabaseAdmin
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
@@ -56,7 +56,7 @@ export default async function handler(
       const todayUTC = new Date().toISOString().slice(0, 10) // e.g. "2026-03-20"
 
       // Ensure a quota row exists for this user (ignore if already exists)
-      await supabase
+      await supabaseAdmin
         .from('user_quotas')
         .upsert(
           {
@@ -68,7 +68,7 @@ export default async function handler(
         )
 
       // Fetch the authoritative quota row
-      const { data: quota, error: quotaError } = await supabase
+      const { data: quota, error: quotaError } = await supabaseAdmin
         .from('user_quotas')
         .select('daily_free_used, daily_reset_date')
         .eq('user_id', user.id)
@@ -81,7 +81,7 @@ export default async function handler(
 
       // If stored date is before today, reset the counter first
       if (quota.daily_reset_date < todayUTC) {
-        await supabase
+        await supabaseAdmin
           .from('user_quotas')
           .update({ daily_free_used: 0, daily_reset_date: todayUTC, updated_at: new Date().toISOString() })
           .eq('user_id', user.id)
@@ -160,7 +160,7 @@ export default async function handler(
       console.log('Task submitted:', seedanceResponse.taskId)
       
       // Save generation record to Supabase (status: processing)
-      const { error: dbError } = await supabase
+      const { error: dbError } = await supabaseAdmin
         .from('video_generations')
         .insert({
           user_id: user.id,
@@ -179,9 +179,9 @@ export default async function handler(
 
       // Atomically increment the correct usage counter
       if (hasActiveSubscription) {
-        await supabase.rpc('increment_subscription_usage', { uid: user.id })
+        await supabaseAdmin.rpc('increment_subscription_usage', { uid: user.id })
       } else {
-        await supabase.rpc('increment_daily_free_usage', { uid: user.id })
+        await supabaseAdmin.rpc('increment_daily_free_usage', { uid: user.id })
       }
       
       return res.status(200).json({
