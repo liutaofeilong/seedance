@@ -1,10 +1,35 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import SEO from '@/components/SEO'
 import { supabase } from '@/lib/supabase'
 import { checkRateLimit, getRemainingTime } from '@/lib/rateLimit'
+
+// Hook to prevent page scroll when scrolling inside a container
+const usePreventScroll = (ref: React.RefObject<HTMLDivElement>) => {
+  useEffect(() => {
+    const element = ref.current
+    if (!element) return
+
+    const handleWheel = (e: WheelEvent) => {
+      const isScrollable = element.scrollHeight > element.clientHeight
+      if (!isScrollable) return
+
+      const scrollTop = element.scrollTop
+      const scrollHeight = element.scrollHeight
+      const clientHeight = element.clientHeight
+
+      // 如果滚动到顶部且向上滚，或滚动到底部且向下滚，则阻止默认行为
+      if ((scrollTop === 0 && e.deltaY < 0) || (scrollTop + clientHeight === scrollHeight && e.deltaY > 0)) {
+        e.preventDefault()
+      }
+    }
+
+    element.addEventListener('wheel', handleWheel, { passive: false })
+    return () => element.removeEventListener('wheel', handleWheel)
+  }, [ref])
+}
 
 const aspectRatios = [
   { label: '21:9', value: '21:9' },
@@ -50,6 +75,12 @@ export default function Generate() {
   const [needsSubscription, setNeedsSubscription] = useState(false)
   const [taskId, setTaskId] = useState<string | null>(null)
   const [taskStatus, setTaskStatus] = useState<string>('')
+
+  const ratioMenuRef = useRef<HTMLDivElement>(null)
+  const resolutionMenuRef = useRef<HTMLDivElement>(null)
+
+  usePreventScroll(ratioMenuRef)
+  usePreventScroll(resolutionMenuRef)
 
   const checkTaskStatus = async (taskId: string, token: string) => {
     try {
@@ -425,11 +456,11 @@ export default function Generate() {
             </div>
 
             {/* Video Parameters */}
-            <div className="glass rounded-2xl p-6 mb-8 border border-white/10">
+            <div className="glass rounded-2xl p-6 mb-8 border border-white/10 overflow-visible">
               <h3 className="text-lg font-semibold mb-4">Video Settings</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
                 {/* Aspect Ratio */}
-                <div className="relative">
+                <div className="relative z-40">
                   <label className="block text-sm font-medium mb-2">Aspect Ratio</label>
                   <button
                     onClick={() => setShowRatioMenu(!showRatioMenu)}
@@ -442,9 +473,10 @@ export default function Generate() {
                   </button>
                   {showRatioMenu && (
                     <motion.div
+                      ref={ratioMenuRef}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full mt-2 left-0 right-0 glass border border-white/10 rounded-xl p-2 z-50"
+                      className="absolute top-full mt-2 left-0 right-0 glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto"
                     >
                       {aspectRatios.map((ratio) => (
                         <button
@@ -467,7 +499,7 @@ export default function Generate() {
                 </div>
 
                 {/* Resolution */}
-                <div className="relative">
+                <div className="relative z-40">
                   <label className="block text-sm font-medium mb-2">Resolution</label>
                   <button
                     onClick={() => setShowResolutionMenu(!showResolutionMenu)}
@@ -480,9 +512,10 @@ export default function Generate() {
                   </button>
                   {showResolutionMenu && (
                     <motion.div
+                      ref={resolutionMenuRef}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full mt-2 left-0 right-0 glass border border-white/10 rounded-xl p-2 z-50"
+                      className="absolute top-full mt-2 left-0 right-0 glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto"
                     >
                       {resolutions.map((res) => (
                         <button
@@ -507,14 +540,19 @@ export default function Generate() {
                 {/* Duration */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Duration ({duration}s)</label>
-                  <input
-                    type="range"
-                    min="3"
-                    max="10"
-                    value={duration}
-                    onChange={(e) => setDuration(parseInt(e.target.value))}
-                    className="w-full h-2 bg-dark-lighter rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                  />
+                  <div className="w-full h-8 bg-gradient-to-r from-slate-700 to-slate-600 rounded-lg flex items-center px-2">
+                    <input
+                      type="range"
+                      min="3"
+                      max="10"
+                      value={duration}
+                      onChange={(e) => setDuration(parseInt(e.target.value))}
+                      className="w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                      style={{
+                        background: 'transparent',
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Generate Audio */}
