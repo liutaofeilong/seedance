@@ -39,33 +39,6 @@ export default async function handler(
 
     console.log('User authenticated:', user.email)
 
-    // Check user quota
-    const { data: quota, error: quotaError } = await supabase
-      .from('user_quotas')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (quotaError && quotaError.code !== 'PGRST116') {
-      console.error('Quota check error:', quotaError)
-    }
-
-    // If no quota record exists, create one
-    if (!quota) {
-      const { error: createError } = await supabase
-        .from('user_quotas')
-        .insert({
-          user_id: user.id,
-          free_generations_used: 0,
-          free_generations_limit: 1,
-          subscription_generations_used: 0,
-        })
-      
-      if (createError) {
-        console.error('Failed to create quota record:', createError)
-      }
-    }
-
     // Check if user has active subscription
     const { data: subscription } = await supabase
       .from('subscriptions')
@@ -77,15 +50,51 @@ export default async function handler(
 
     const hasActiveSubscription = !!subscription
 
-    // Check quota limits
+    // Subscribed users have no generation limit
     if (!hasActiveSubscription) {
-      const freeUsed = quota?.free_generations_used || 0
-      const freeLimit = quota?.free_generations_limit || 1
+      // Today's date string (UTC) used as the reset key
+      const todayUTC = new Date().toISOString().slice(0, 10) // e.g. "2026-03-20"
 
-      if (freeUsed >= freeLimit) {
+      // Ensure a quota row exists for this user (ignore if already exists)
+      await supabase
+        .from('user_quotas')
+        .upsert(
+          {
+            user_id: user.id,
+            daily_free_used: 0,
+            daily_reset_date: todayUTC,
+          },
+          { onConflict: 'user_id', ignoreDuplicates: true }
+        )
+
+      // Fetch the authoritative quota row
+      const { data: quota, error: quotaError } = await supabase
+        .from('user_quotas')
+        .select('daily_free_used, daily_reset_date')
+        .eq('user_id', user.id)
+        .single()
+
+      if (quotaError || !quota) {
+        console.error('Quota fetch error:', quotaError)
+        return res.status(500).json({ success: false, message: 'Failed to check quota' })
+      }
+
+      // If stored date is before today, reset the counter first
+      if (quota.daily_reset_date < todayUTC) {
+        await supabase
+          .from('user_quotas')
+          .update({ daily_free_used: 0, daily_reset_date: todayUTC, updated_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+        quota.daily_free_used = 0
+      }
+
+      const dailyLimit = 1
+      console.log(`Daily quota check: used=${quota.daily_free_used}, limit=${dailyLimit}, date=${quota.daily_reset_date}`)
+
+      if (quota.daily_free_used >= dailyLimit) {
         return res.status(403).json({
           success: false,
-          message: 'Free generation limit reached. Please subscribe to continue.',
+          message: 'You have used your free generation for today. Subscribe to generate unlimited videos.',
           needsSubscription: true,
         })
       }
@@ -168,23 +177,11 @@ export default async function handler(
         console.error('Database error:', dbError)
       }
 
-      // Update user quota
+      // Atomically increment the correct usage counter
       if (hasActiveSubscription) {
-        // Increment subscription usage
-        await supabase
-          .from('user_quotas')
-          .update({
-            subscription_generations_used: (quota?.subscription_generations_used || 0) + 1,
-          })
-          .eq('user_id', user.id)
+        await supabase.rpc('increment_subscription_usage', { uid: user.id })
       } else {
-        // Increment free usage
-        await supabase
-          .from('user_quotas')
-          .update({
-            free_generations_used: (quota?.free_generations_used || 0) + 1,
-          })
-          .eq('user_id', user.id)
+        await supabase.rpc('increment_daily_free_usage', { uid: user.id })
       }
       
       return res.status(200).json({
