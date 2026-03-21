@@ -9,7 +9,7 @@ import { checkRateLimit, getRemainingTime } from '@/lib/rateLimit'
 // Hook to handle dropdown scroll and close on outside click
 const useDropdownScroll = (
   menuRef: React.RefObject<HTMLDivElement>,
-  triggerRef: React.RefObject<HTMLDivElement>,
+  triggerRef: React.RefObject<HTMLButtonElement>,
   isOpen: boolean,
   onClose: () => void
 ) => {
@@ -99,8 +99,8 @@ export default function Generate() {
 
   const ratioMenuRef = useRef<HTMLDivElement>(null)
   const resolutionMenuRef = useRef<HTMLDivElement>(null)
-  const ratioButtonRef = useRef<HTMLDivElement>(null)
-  const resolutionButtonRef = useRef<HTMLDivElement>(null)
+  const ratioButtonRef = useRef<HTMLButtonElement>(null)
+  const resolutionButtonRef = useRef<HTMLButtonElement>(null)
 
   useDropdownScroll(ratioMenuRef, ratioButtonRef, showRatioMenu, () => setShowRatioMenu(false))
   useDropdownScroll(resolutionMenuRef, resolutionButtonRef, showResolutionMenu, () => setShowResolutionMenu(false))
@@ -478,14 +478,12 @@ export default function Generate() {
               </button>
             </div>
 
-            {/* Video Parameters */}
-            <div className="glass rounded-2xl p-6 mb-8 border border-white/10 relative" style={{
-              marginBottom: showRatioMenu || showResolutionMenu ? '280px' : '32px'
-            }}>
+            {/* Video Parameters - 核心修改：移除动态marginBottom，增加z-10确保层级 */}
+            <div className="glass rounded-2xl p-6 mb-8 border border-white/10 relative z-10">
               <h3 className="text-lg font-semibold mb-4">Video Settings</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
-                {/* Aspect Ratio */}
+                {/* Aspect Ratio - 下拉菜单增加z-[999]悬浮层级 */}
                 <div className="relative z-40">
                   <label className="block text-sm font-medium mb-2">Aspect Ratio</label>
                   <button
@@ -503,10 +501,7 @@ export default function Generate() {
                       ref={ratioMenuRef}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-cyan-500/50 scrollbar-track-transparent top-full left-0 mt-2"
-                      onAnimationComplete={() => {
-                        // 动画完成后，确保菜单可见
-                      }}
+                      className="absolute glass border border-white/10 rounded-xl p-2 z-[999] shadow-2xl max-h-64 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-cyan-500/50 scrollbar-track-transparent top-full left-0 mt-2"
                     >
                       {aspectRatios.map((ratio) => (
                         <button
@@ -528,7 +523,7 @@ export default function Generate() {
                   )}
                 </div>
 
-                {/* Resolution */}
+                {/* Resolution - 下拉菜单增加z-[999]悬浮层级 */}
                 <div className="relative z-40">
                   <label className="block text-sm font-medium mb-2">Resolution</label>
                   <button
@@ -546,7 +541,7 @@ export default function Generate() {
                       ref={resolutionMenuRef}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-cyan-500/50 scrollbar-track-transparent top-full left-0 mt-2"
+                      className="absolute glass border border-white/10 rounded-xl p-2 z-[999] shadow-2xl max-h-64 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-cyan-500/50 scrollbar-track-transparent top-full left-0 mt-2"
                     >
                       {resolutions.map((res) => (
                         <button
@@ -628,8 +623,8 @@ export default function Generate() {
               </div>
             </div>
 
-            {/* Generation Form */}
-            <div className="glass rounded-2xl p-8 mb-8 border border-white/10">
+            {/* Generation Form - z-0 确保层级低于下拉菜单 */}
+            <div className="glass rounded-2xl p-8 mb-8 border border-white/10 z-0 relative">
               {mode === 'image' && (
                 <div className="mb-6">
                   <label className="block text-lg font-semibold mb-3">
@@ -840,4 +835,3 @@ export default function Generate() {
     </>
   )
 }
-
