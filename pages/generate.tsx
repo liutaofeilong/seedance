@@ -6,29 +6,50 @@ import SEO from '@/components/SEO'
 import { supabase } from '@/lib/supabase'
 import { checkRateLimit, getRemainingTime } from '@/lib/rateLimit'
 
-// Hook to prevent page scroll when scrolling inside a container
-const usePreventScroll = (ref: React.RefObject<HTMLDivElement>) => {
+// Hook to handle dropdown scroll and close on outside click
+const useDropdownScroll = (
+  menuRef: React.RefObject<HTMLDivElement>,
+  triggerRef: React.RefObject<HTMLDivElement>,
+  isOpen: boolean,
+  onClose: () => void
+) => {
   useEffect(() => {
-    const element = ref.current
-    if (!element) return
+    if (!isOpen) return
 
-    const handleWheel = (e: WheelEvent) => {
-      const isScrollable = element.scrollHeight > element.clientHeight
-      if (!isScrollable) return
+    const menuEl = menuRef.current
+    const triggerEl = triggerRef.current
+    if (!menuEl || !triggerEl) return
 
-      const scrollTop = element.scrollTop
-      const scrollHeight = element.scrollHeight
-      const clientHeight = element.clientHeight
-
-      // 如果滚动到顶部且向上滚，或滚动到底部且向下滚，则阻止默认行为
-      if ((scrollTop === 0 && e.deltaY < 0) || (scrollTop + clientHeight === scrollHeight && e.deltaY > 0)) {
-        e.preventDefault()
+    // 点击外部关闭菜单（保留触发器点击，不会被误关）
+    const handlePointerDownOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node
+      if (!menuEl.contains(target) && !triggerEl.contains(target)) {
+        onClose()
       }
     }
 
-    element.addEventListener('wheel', handleWheel, { passive: false })
-    return () => element.removeEventListener('wheel', handleWheel)
-  }, [ref])
+    // 菜单内滚轮只滚菜单，不传递到页面
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      menuEl.scrollTop += e.deltaY
+    }
+
+    // 打开时锁定页面滚动，确保滚轮不带动整页
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    menuEl.addEventListener('wheel', handleWheel, { passive: false })
+    document.addEventListener('mousedown', handlePointerDownOutside)
+    document.addEventListener('touchstart', handlePointerDownOutside)
+
+    return () => {
+      menuEl.removeEventListener('wheel', handleWheel)
+      document.removeEventListener('mousedown', handlePointerDownOutside)
+      document.removeEventListener('touchstart', handlePointerDownOutside)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen, menuRef, triggerRef, onClose])
 }
 
 const aspectRatios = [
@@ -78,9 +99,11 @@ export default function Generate() {
 
   const ratioMenuRef = useRef<HTMLDivElement>(null)
   const resolutionMenuRef = useRef<HTMLDivElement>(null)
+  const ratioButtonRef = useRef<HTMLDivElement>(null)
+  const resolutionButtonRef = useRef<HTMLDivElement>(null)
 
-  usePreventScroll(ratioMenuRef)
-  usePreventScroll(resolutionMenuRef)
+  useDropdownScroll(ratioMenuRef, ratioButtonRef, showRatioMenu, () => setShowRatioMenu(false))
+  useDropdownScroll(resolutionMenuRef, resolutionButtonRef, showResolutionMenu, () => setShowResolutionMenu(false))
 
   const checkTaskStatus = async (taskId: string, token: string) => {
     try {
@@ -456,13 +479,17 @@ export default function Generate() {
             </div>
 
             {/* Video Parameters */}
-            <div className="glass rounded-2xl p-6 mb-8 border border-white/10 overflow-visible">
+            <div className="glass rounded-2xl p-6 mb-8 border border-white/10 relative" style={{
+              marginBottom: showRatioMenu || showResolutionMenu ? '280px' : '32px'
+            }}>
               <h3 className="text-lg font-semibold mb-4">Video Settings</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
                 {/* Aspect Ratio */}
                 <div className="relative z-40">
                   <label className="block text-sm font-medium mb-2">Aspect Ratio</label>
                   <button
+                    ref={ratioButtonRef}
                     onClick={() => setShowRatioMenu(!showRatioMenu)}
                     className="w-full px-4 py-2 rounded-lg glass border border-white/10 transition-all flex items-center justify-between"
                   >
@@ -476,7 +503,10 @@ export default function Generate() {
                       ref={ratioMenuRef}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full mt-2 left-0 right-0 glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto"
+                      className="absolute glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-cyan-500/50 scrollbar-track-transparent top-full left-0 mt-2"
+                      onAnimationComplete={() => {
+                        // 动画完成后，确保菜单可见
+                      }}
                     >
                       {aspectRatios.map((ratio) => (
                         <button
@@ -502,6 +532,7 @@ export default function Generate() {
                 <div className="relative z-40">
                   <label className="block text-sm font-medium mb-2">Resolution</label>
                   <button
+                    ref={resolutionButtonRef}
                     onClick={() => setShowResolutionMenu(!showResolutionMenu)}
                     className="w-full px-4 py-2 rounded-lg glass border border-white/10 transition-all flex items-center justify-between"
                   >
@@ -515,7 +546,7 @@ export default function Generate() {
                       ref={resolutionMenuRef}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full mt-2 left-0 right-0 glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto"
+                      className="absolute glass border border-white/10 rounded-xl p-2 z-50 shadow-2xl max-h-64 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-cyan-500/50 scrollbar-track-transparent top-full left-0 mt-2"
                     >
                       {resolutions.map((res) => (
                         <button
@@ -593,6 +624,7 @@ export default function Generate() {
                 >
                   {cameraFixed ? '📷 Fixed Camera' : '📷 Moving Camera'}
                 </button>
+              </div>
               </div>
             </div>
 
